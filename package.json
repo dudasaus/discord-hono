@@ -1,6 +1,6 @@
 {
   "name": "@dudasaus/discord-hono",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Create Discord apps with Hono",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier .",
-    "test": "exit 0"
+    "test": "exit 0",
+    "clean": "rm -rf ./dist/"
   },
   "author": "Austin Dudas",
   "license": "ISC",
