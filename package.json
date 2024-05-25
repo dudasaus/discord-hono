@@ -1,0 +1,17 @@
+{
+  "name": "@dudasaus/discord-hono",
+  "version": "0.0.0",
+  "description": "Create Discord apps with Hono",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier .",
+    "test": "exit 0"
+  },
+  "author": "Austin Dudas",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
+  }
+}
