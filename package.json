@@ -13,5 +13,8 @@
   "devDependencies": {
     "prettier": "^3.2.5",
     "typescript": "^5.4.5"
+  },
+  "publishConfig": {
+    "@dudasaus:registry": "https://npm.pkg.github.com"
   }
 }
