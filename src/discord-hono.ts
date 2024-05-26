@@ -12,12 +12,12 @@ interface DiscordBindings extends Bindings {
   DISCORD_PUBLIC_KEY: string;
 }
 
-export class DiscordHono {
+export class DiscordHono<T> {
   private handlersRegistered = false;
   private readonly commandHandlers = new Map<string, Handler>();
   constructor(
     readonly app: Hono<{
-      Bindings: DiscordBindings;
+      Bindings: T & DiscordBindings;
     }>,
   ) {}
 

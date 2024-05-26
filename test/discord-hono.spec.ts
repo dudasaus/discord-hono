@@ -17,7 +17,7 @@ describe('discord-hono', () => {
 
   const ru = new RequestUtils();
   const DISCORD_PUBLIC_KEY = ru.publicKey;
-  const MOCK_ENV = { DISCORD_PUBLIC_KEY };
+  const MOCK_ENV = { DISCORD_PUBLIC_KEY, somethingElseTypeTest: 12345 };
 
   beforeEach(() => {
     app = new Hono<{ Bindings: typeof MOCK_ENV }>();
