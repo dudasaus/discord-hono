@@ -11,11 +11,14 @@
     "build": "tsc",
     "format": "prettier .",
     "test": "vitest --run",
+    "test-ui": "vitest --coverage --ui",
     "clean": "rm -rf ./dist/"
   },
   "author": "Austin Dudas",
   "license": "ISC",
   "devDependencies": {
+    "@vitest/coverage-istanbul": "^1.6.0",
+    "@vitest/ui": "^1.6.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"

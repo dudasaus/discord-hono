@@ -78,5 +78,17 @@ describe('discord-hono', () => {
       expect(resText).toBe('Command handler not found');
       expect(res.status).toBe(404);
     });
+
+    test('returns 404 for missing types', async () => {
+      const body = {
+        type: -1,
+      };
+      const req = new Request('https://test.com/interactions', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      const res = await app.request(req);
+      expect(res.status).toBe(404);
+    });
   });
 });
