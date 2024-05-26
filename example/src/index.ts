@@ -14,7 +14,10 @@ discord
     await new Promise((res) => {
       setTimeout(res, 5000);
     });
-    return 'fish';
+    return 'delayed response';
+  })
+  .command('dev-catches', () => {
+    return 'instant response';
   })
   .register();
 

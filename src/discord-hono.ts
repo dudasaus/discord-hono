@@ -7,9 +7,15 @@ import {
 import { verifySignature } from './verify';
 import { Bindings } from 'hono/types';
 
-type Handler = () => Promise<string>;
+type Handler = () => Promise<string> | string;
 interface DiscordBindings extends Bindings {
   DISCORD_PUBLIC_KEY: string;
+  DISCORD_APP_ID: string;
+  DISCORD_API_URL?: string;
+}
+
+function wait(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
 }
 
 export class DiscordHono<T> {
@@ -41,13 +47,43 @@ export class DiscordHono<T> {
       return c.body('Command handler not found', 404);
     }
 
-    const content = await handler();
+    const handlerResult = handler();
+    if (typeof handlerResult === 'string') {
+      return c.json({
+        type: InteractionResponseType.ChannelMessageWithSource,
+        data: {
+          content: handlerResult,
+        },
+      });
+    }
+
+    // Start the late update.
+    const lateUpdate = async () => {
+      const content = await handler();
+      const baseUrl = c.env.DISCORD_API_URL ?? 'https://discord.com/api/v10';
+      const updateRequest = new Request(
+        `${baseUrl}/webhooks/${c.env.DISCORD_APP_ID}/${body.token}/messages/@original`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ content }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      const retryTimers = [1, 5, 10];
+      for (let attempt of [...retryTimers, 0]) {
+        const res = await fetch(updateRequest);
+        if (res.ok) break;
+        if (attempt > 0) {
+          await wait(attempt * 1000);
+        }
+      }
+    };
+    c.executionCtx.waitUntil(lateUpdate());
 
     return c.json({
-      type: InteractionResponseType.ChannelMessageWithSource,
-      data: {
-        content,
-      },
+      type: InteractionResponseType.DeferredChannelMessageWithSource,
     });
   }
 
