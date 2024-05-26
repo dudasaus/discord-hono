@@ -34,8 +34,24 @@ describe('verify', () => {
   });
 
   test('rejects bad signatures', () => {
-    expect(verify(null, Buffer.from('i am wrong'), publicKey, signature)).toBe(
-      false,
-    );
+    expect(
+      verifySignature({
+        publicKey: publicKeyString,
+        timestamp: '717171',
+        rawBody,
+        signature: signatureString,
+      }),
+    ).toBe(false);
+  });
+
+  test('rejects invalid signatures', () => {
+    expect(
+      verifySignature({
+        publicKey: '',
+        timestamp: '',
+        rawBody,
+        signature: signatureString,
+      }),
+    ).toBe(false);
   });
 });
