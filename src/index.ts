@@ -1,3 +1,1 @@
-export function helloWorld() {
-  console.log('Hello world');
-}
+export * from './discord-hono';

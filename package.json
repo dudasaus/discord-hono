@@ -10,16 +10,21 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier .",
-    "test": "exit 0",
+    "test": "vitest --run",
     "clean": "rm -rf ./dist/"
   },
   "author": "Austin Dudas",
   "license": "ISC",
   "devDependencies": {
     "prettier": "^3.2.5",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   },
   "publishConfig": {
     "@dudasaus:registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "discord-api-types": "^0.37.85",
+    "hono": "^4.3.11"
   }
 }
