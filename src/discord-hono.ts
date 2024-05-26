@@ -5,15 +5,19 @@ import {
   APIApplicationCommandInteraction,
 } from 'discord-api-types/v10';
 import { verifySignature } from './verify';
+import { Bindings } from 'hono/types';
 
 type Handler = () => Promise<string>;
+interface DiscordBindings extends Bindings {
+  DISCORD_PUBLIC_KEY: string;
+}
 
 export class DiscordHono {
   private handlersRegistered = false;
   private readonly commandHandlers = new Map<string, Handler>();
   constructor(
     readonly app: Hono<{
-      Bindings: { DISCORD_PUBLIC_KEY: string };
+      Bindings: DiscordBindings;
     }>,
   ) {}
 
