@@ -7,9 +7,13 @@ export function verifySignature(props: {
   timestamp: string;
   rawBody: string;
 }): boolean {
-  return nacl.sign.detached.verify(
-    Buffer.from(props.timestamp + props.rawBody),
-    Buffer.from(props.signature, 'hex'),
-    Buffer.from(props.publicKey, 'hex'),
-  );
+  try {
+    return nacl.sign.detached.verify(
+      Buffer.from(props.timestamp + props.rawBody),
+      Buffer.from(props.signature, 'hex'),
+      Buffer.from(props.publicKey, 'hex'),
+    );
+  } catch (e) {
+    return false;
+  }
 }

@@ -6,6 +6,7 @@ import {
   InteractionResponseType,
   InteractionType,
 } from 'discord-api-types/v10';
+import { RequestUtils } from './request_utils';
 
 type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
@@ -14,6 +15,9 @@ type RecursivePartial<T> = {
 describe('discord-hono', () => {
   let app: Hono;
 
+  const ru = new RequestUtils();
+  const PUBLIC_KEY = ru.publicKey;
+
   beforeEach(() => {
     app = new Hono();
   });
@@ -21,7 +25,7 @@ describe('discord-hono', () => {
   describe('setup', () => {
     test('throws an error on command after register', () => {
       expect(() => {
-        const discord = new DiscordHono(app);
+        const discord = new DiscordHono(app, PUBLIC_KEY);
         discord.register();
 
         discord.command('should-fail', async () => 'L');
@@ -31,7 +35,7 @@ describe('discord-hono', () => {
 
   describe('handling', () => {
     beforeEach(() => {
-      const discord = new DiscordHono(app);
+      const discord = new DiscordHono(app, PUBLIC_KEY);
 
       discord
         .command('test-command', async () => {
@@ -44,10 +48,7 @@ describe('discord-hono', () => {
       const body = {
         type: InteractionType.Ping,
       };
-      const req = new Request('https://test.com/interactions', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const req = ru.createRequest(body);
       const res = await app.request(req);
       const resBody = await res.json();
       expect(resBody).toStrictEqual({
@@ -63,10 +64,7 @@ describe('discord-hono', () => {
           name: 'test-command',
         },
       };
-      const req = new Request('https://test.com/interactions', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const req = ru.createRequest(body);
       const res = await app.request(req);
       const resBody = await res.json();
       expect(resBody).toStrictEqual({
@@ -85,10 +83,7 @@ describe('discord-hono', () => {
           name: 'test-fake-command',
         },
       };
-      const req = new Request('https://test.com/interactions', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const req = ru.createRequest(body);
       const res = await app.request(req);
       const resText = await res.text();
       expect(resText).toBe('Command handler not found');
@@ -99,12 +94,18 @@ describe('discord-hono', () => {
       const body = {
         type: -1,
       };
-      const req = new Request('https://test.com/interactions', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const req = ru.createRequest(body);
       const res = await app.request(req);
       expect(res.status).toBe(404);
+    });
+
+    test('returns 401s for bad signatures', async () => {
+      const body = {
+        type: InteractionType.Ping,
+      };
+      const req = ru.createRequest(body, true);
+      const res = await app.request(req);
+      expect(res.status).toBe(401);
     });
   });
 });

@@ -4,13 +4,17 @@ import {
   InteractionResponseType,
   APIApplicationCommandInteraction,
 } from 'discord-api-types/v10';
+import { verifySignature } from './verify';
 
 type Handler = () => Promise<string>;
 
 export class DiscordHono {
   private handlersRegistered = false;
   private readonly commandHandlers = new Map<string, Handler>();
-  constructor(readonly app: Hono) {}
+  constructor(
+    readonly app: Hono,
+    readonly publicKey: string,
+  ) {}
 
   command(name: string, handler: Handler): this {
     if (this.handlersRegistered) {
@@ -51,7 +55,23 @@ export class DiscordHono {
   register() {
     this.handlersRegistered = true;
     this.app.post('/interactions', async (c) => {
-      const body = await c.req.json();
+      const rawBody = await c.req.text();
+
+      // Verify.
+      const signature = c.req.header('x-signature-ed25519');
+      const timestamp = c.req.header('x-signature-timestamp');
+      if (
+        !verifySignature({
+          publicKey: this.publicKey,
+          signature,
+          timestamp,
+          rawBody,
+        })
+      ) {
+        return c.body('Unable to verify', 401);
+      }
+
+      const body = JSON.parse(rawBody);
       const { type } = body;
 
       switch (type) {
