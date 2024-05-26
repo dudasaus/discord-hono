@@ -17,6 +17,7 @@
   "author": "Austin Dudas",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "@vitest/coverage-istanbul": "^1.6.0",
     "@vitest/ui": "^1.6.0",
     "prettier": "^3.2.5",
@@ -28,6 +29,7 @@
   },
   "dependencies": {
     "discord-api-types": "^0.37.85",
-    "hono": "^4.3.11"
+    "hono": "^4.3.11",
+    "tweetnacl": "^1.0.3"
   }
 }

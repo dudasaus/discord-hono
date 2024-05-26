@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "dist",
     "declaration": true,
-    "lib": ["ES2020"],
-    "types": ["vitest"]
+    "lib": ["ES2020"]
   }
 }
