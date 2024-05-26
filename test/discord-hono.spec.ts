@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { DiscordHono } from '../src/discord-hono';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   APIApplicationCommandInteraction,
   InteractionResponseType,
   InteractionType,
 } from 'discord-api-types/v10';
 import { RequestUtils } from './request_utils';
+import { TestExecutionContext } from './test_execution_context';
 
 type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
@@ -14,13 +15,27 @@ type RecursivePartial<T> = {
 
 describe('discord-hono', () => {
   let app: Hono<{ Bindings: typeof MOCK_ENV }>;
+  let executionCtx: TestExecutionContext;
 
   const ru = new RequestUtils();
   const DISCORD_PUBLIC_KEY = ru.publicKey;
-  const MOCK_ENV = { DISCORD_PUBLIC_KEY, somethingElseTypeTest: 12345 };
+  const DISCORD_APP_ID = 'abcdef';
+  const DISCORD_API_URL = 'https://discord/api/v100';
+  const MOCK_ENV = {
+    DISCORD_PUBLIC_KEY,
+    DISCORD_APP_ID,
+    DISCORD_API_URL,
+    somethingElseTypeTest: 12345,
+  };
+
+  const fetchSpy = vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(new Response());
 
   beforeEach(() => {
     app = new Hono<{ Bindings: typeof MOCK_ENV }>();
+    executionCtx = new TestExecutionContext();
+    vi.clearAllMocks();
   });
 
   describe('setup', () => {
@@ -29,7 +44,7 @@ describe('discord-hono', () => {
         const discord = new DiscordHono(app);
         discord.register();
 
-        discord.command('should-fail', async () => 'L');
+        discord.command('should-fail', () => 'L');
       }).toThrowError();
     });
   });
@@ -39,9 +54,10 @@ describe('discord-hono', () => {
       const discord = new DiscordHono(app);
 
       discord
-        .command('test-command', async () => {
-          return 'Hello world';
+        .command('test-delayed-command', async () => {
+          return 'delayed';
         })
+        .command('test-instant-command', () => 'instant')
         .register();
     });
 
@@ -58,11 +74,11 @@ describe('discord-hono', () => {
       expect(res.status).toBe(200);
     });
 
-    test('handles commands', async () => {
+    test('handles insant commands', async () => {
       const body: RecursivePartial<APIApplicationCommandInteraction> = {
         type: InteractionType.ApplicationCommand,
         data: {
-          name: 'test-command',
+          name: 'test-instant-command',
         },
       };
       const req = ru.createRequest(body);
@@ -71,10 +87,49 @@ describe('discord-hono', () => {
       expect(resBody).toStrictEqual({
         type: InteractionResponseType.ChannelMessageWithSource,
         data: {
-          content: 'Hello world',
+          content: 'instant',
         },
       });
       expect(res.status).toBe(200);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    test('handles delayed commands', async () => {
+      const body: RecursivePartial<APIApplicationCommandInteraction> = {
+        type: InteractionType.ApplicationCommand,
+        data: {
+          name: 'test-delayed-command',
+        },
+        token: 'i-am-token',
+      };
+      const req = ru.createRequest(body);
+      const res = await app.request(req, {}, MOCK_ENV, executionCtx);
+      expect(res.status).toBe(200);
+      const resBody = await res.json();
+      expect(resBody).toStrictEqual({
+        type: InteractionResponseType.DeferredChannelMessageWithSource,
+      });
+      await executionCtx.waitForComplete();
+
+      const expectedToken = 'i-am-token';
+      const expectedRequestUrl = `${DISCORD_API_URL}/webhooks/${DISCORD_APP_ID}/${expectedToken}/messages/@original`;
+      const expectedUpdateRequest = new Request(expectedRequestUrl, {
+        method: 'PATCH',
+        body: JSON.stringify({ content: 'delayed' }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      const [actualRequest] = fetchSpy.mock.lastCall! as [Request];
+      expect(actualRequest.url).toBe(expectedUpdateRequest.url);
+      expect(actualRequest.method).toBe(expectedUpdateRequest.method);
+      expect(await actualRequest.json()).toStrictEqual(
+        await expectedUpdateRequest.json(),
+      );
+      expect(actualRequest.headers).toStrictEqual(
+        expectedUpdateRequest.headers,
+      );
     });
 
     test('returns 404 for missing handlers', async () => {

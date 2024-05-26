@@ -74,7 +74,9 @@ export class DiscordHono<T> {
       const retryTimers = [1, 5, 10];
       for (let attempt of [...retryTimers, 0]) {
         const res = await fetch(updateRequest);
-        if (res.ok) break;
+        if (res.ok) {
+          break;
+        }
         if (attempt > 0) {
           await wait(attempt * 1000);
         }
