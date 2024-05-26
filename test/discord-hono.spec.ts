@@ -13,19 +13,20 @@ type RecursivePartial<T> = {
 };
 
 describe('discord-hono', () => {
-  let app: Hono;
+  let app: Hono<{ Bindings: typeof MOCK_ENV }>;
 
   const ru = new RequestUtils();
-  const PUBLIC_KEY = ru.publicKey;
+  const DISCORD_PUBLIC_KEY = ru.publicKey;
+  const MOCK_ENV = { DISCORD_PUBLIC_KEY };
 
   beforeEach(() => {
-    app = new Hono();
+    app = new Hono<{ Bindings: typeof MOCK_ENV }>();
   });
 
   describe('setup', () => {
     test('throws an error on command after register', () => {
       expect(() => {
-        const discord = new DiscordHono(app, PUBLIC_KEY);
+        const discord = new DiscordHono(app);
         discord.register();
 
         discord.command('should-fail', async () => 'L');
@@ -35,7 +36,7 @@ describe('discord-hono', () => {
 
   describe('handling', () => {
     beforeEach(() => {
-      const discord = new DiscordHono(app, PUBLIC_KEY);
+      const discord = new DiscordHono(app);
 
       discord
         .command('test-command', async () => {
@@ -49,7 +50,7 @@ describe('discord-hono', () => {
         type: InteractionType.Ping,
       };
       const req = ru.createRequest(body);
-      const res = await app.request(req);
+      const res = await app.request(req, {}, MOCK_ENV);
       const resBody = await res.json();
       expect(resBody).toStrictEqual({
         type: InteractionResponseType.Pong,
@@ -65,7 +66,7 @@ describe('discord-hono', () => {
         },
       };
       const req = ru.createRequest(body);
-      const res = await app.request(req);
+      const res = await app.request(req, {}, MOCK_ENV);
       const resBody = await res.json();
       expect(resBody).toStrictEqual({
         type: InteractionResponseType.ChannelMessageWithSource,
@@ -84,7 +85,7 @@ describe('discord-hono', () => {
         },
       };
       const req = ru.createRequest(body);
-      const res = await app.request(req);
+      const res = await app.request(req, {}, MOCK_ENV);
       const resText = await res.text();
       expect(resText).toBe('Command handler not found');
       expect(res.status).toBe(404);
@@ -95,7 +96,7 @@ describe('discord-hono', () => {
         type: -1,
       };
       const req = ru.createRequest(body);
-      const res = await app.request(req);
+      const res = await app.request(req, {}, MOCK_ENV);
       expect(res.status).toBe(404);
     });
 
@@ -104,7 +105,7 @@ describe('discord-hono', () => {
         type: InteractionType.Ping,
       };
       const req = ru.createRequest(body, true);
-      const res = await app.request(req);
+      const res = await app.request(req, {}, MOCK_ENV);
       expect(res.status).toBe(401);
     });
   });

@@ -12,8 +12,9 @@ export class DiscordHono {
   private handlersRegistered = false;
   private readonly commandHandlers = new Map<string, Handler>();
   constructor(
-    readonly app: Hono,
-    readonly publicKey: string,
+    readonly app: Hono<{
+      Bindings: { DISCORD_PUBLIC_KEY: string };
+    }>,
   ) {}
 
   command(name: string, handler: Handler): this {
@@ -60,9 +61,10 @@ export class DiscordHono {
       // Verify.
       const signature = c.req.header('x-signature-ed25519');
       const timestamp = c.req.header('x-signature-timestamp');
+      const publicKey = c.env.DISCORD_PUBLIC_KEY;
       if (
         !verifySignature({
-          publicKey: this.publicKey,
+          publicKey,
           signature,
           timestamp,
           rawBody,
