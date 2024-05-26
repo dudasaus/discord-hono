@@ -1,6 +1,6 @@
 {
   "name": "@dudasaus/discord-hono",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Create Discord apps with Hono",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
