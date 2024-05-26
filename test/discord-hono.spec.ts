@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { DiscordHono } from '../src/discord-hono';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import {
   APIApplicationCommandInteraction,
   InteractionResponseType,
