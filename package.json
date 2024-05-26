@@ -4,6 +4,9 @@
   "description": "Create Discord apps with Hono",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "workspaces": [
+    "example"
+  ],
   "files": [
     "dist"
   ],
