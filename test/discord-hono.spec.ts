@@ -40,6 +40,22 @@ describe('discord-hono', () => {
         .register();
     });
 
+    test('responds pong to ping', async () => {
+      const body = {
+        type: InteractionType.Ping,
+      };
+      const req = new Request('https://test.com/interactions', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      const res = await app.request(req);
+      const resBody = await res.json();
+      expect(resBody).toStrictEqual({
+        type: InteractionResponseType.Pong,
+      });
+      expect(res.status).toBe(200);
+    });
+
     test('handles commands', async () => {
       const body: RecursivePartial<APIApplicationCommandInteraction> = {
         type: InteractionType.ApplicationCommand,

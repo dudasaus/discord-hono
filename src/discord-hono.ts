@@ -20,7 +20,10 @@ export class DiscordHono {
     return this;
   }
 
-  async handleCommand(c: Context, body: APIApplicationCommandInteraction) {
+  private async handleCommand(
+    c: Context,
+    body: APIApplicationCommandInteraction,
+  ) {
     const commandName = body.data.name;
 
     const handler = this.commandHandlers.get(commandName);
@@ -39,14 +42,25 @@ export class DiscordHono {
     });
   }
 
+  private pong(c: Context) {
+    return c.json({
+      type: InteractionResponseType.Pong,
+    });
+  }
+
   register() {
     this.handlersRegistered = true;
     this.app.post('/interactions', async (c) => {
       const body = await c.req.json();
       const { type } = body;
 
-      if (type === InteractionType.ApplicationCommand) {
-        return this.handleCommand(c, body);
+      switch (type) {
+        case InteractionType.Ping:
+          return this.pong(c);
+        case InteractionType.ApplicationCommand:
+          return this.handleCommand(c, body);
+        default:
+          return;
       }
     });
   }
